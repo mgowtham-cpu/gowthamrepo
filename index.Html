@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Flavor Club</title>
+  <!-- Tailwind CDN for quick prototyping (use built build for production) -->
+  <script src="style.css"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-3xl mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-6">Flavor Club</h1>
+
+    <section id="new-post" class="mb-8">
+      <input id="title" placeholder="Post title" class="w-full p-2 mb-2 border rounded" />
+      <textarea id="body" placeholder="Share your recipe or food story..." class="w-full p-2 mb-2 border rounded"></textarea>
+      <button id="postBtn" class="bg-green-500 text-white px-4 py-2 rounded">Create Post</button>
+    </section>
+
+    <section id="posts">
+      <h2 class="text-xl font-semibold mb-4">Latest posts</h2>
+      <div id="postsList" class="space-y-4"></div>
+    </section>
+  </div>
+
+  <script>
+    const API = "http://localhost:8000"
+    // store token in localStorage after registering / logging in
+    const token = localStorage.getItem("ff_token") || ""
+
+    async function loadPosts() {
+      const res = await fetch(API + "/posts")
+      const posts = await res.json()
+      const list = document.getElementById("postsList")
+      list.innerHTML = ""
+      posts.forEach(p => {
+        const el = document.createElement("article")
+        el.className = "p-4 bg-white rounded shadow"
+        el.innerHTML = `<h3 class="font-bold">${p.title}</h3>
+                        <p class="text-sm text-gray-600">${new Date(p.created_at).toLocaleString()}</p>
+                        <p class="mt-2">${p.body}</p>`
+        list.appendChild(el)
+      })
+    }
+
+    document.getElementById("postBtn").addEventListener("click", async () => {
+      const title = document.getElementById("title").value
+      const body = document.getElementById("body").value
+      if (!title || !body) return alert("fill both")
+      const res = await fetch(API + "/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Authorization": "Bearer " + token
+        },
+        body: new URLSearchParams({ title, body })
+      })
+      if (res.ok) {
+        document.getElementById("title").value = ""
+        document.getElementById("body").value = ""
+        loadPosts()
+      } else {
+        const err = await res.json()
+        alert("Error: " + (err.detail || res.statusText))
+      }
+    })
+
+    loadPosts()
+  </script>
+</body>
+</html>
