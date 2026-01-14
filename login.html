@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Secure Portal</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style (1).css">
 </head>
 <body>
     <main class="login-container">
         <form action="/login-endpoint" method="POST" class="login-form">
             <h2>Welcome Back</h2>
             <p>Please enter your details to sign in.</p>
+           
 
             <div class="input-group">
                 <label for="email">Email Address</label>
@@ -26,11 +27,35 @@
                 <label><input type="checkbox"> Remember me</label>
                 <a href="#">Forgot password?</a>
             </div>
+            
 
             <button type="submit" class="login-btn">Sign In</button>
 
             <p class="footer-text">Don't have an account? <a href="#">Create one</a></p>
         </form>
     </main>
+    <script>
+    const loginForm = document.querySelector('.login-form');
+loginForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('username', document.getElementById('email').value); // FastAPI uses 'username' for the ID field
+    formData.append('password', document.getElementById('password').value);
+
+    const response = await fetch('/auth/login', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('username', data.user.username);
+        window.location.href = "/"; // Redirect to home
+    } else {
+        alert("Login failed! Check your ingredients (credentials).");
+    }
+};
+</script>
 </body>
 </html>

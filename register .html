@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Flavor Club | Register</title>
+    <link rel="stylesheet" href="register_styles.css">
+</head>
+<body>
+    <main class="login-container">
+        <form id="registerForm" class="login-form">
+            <h2>Create Account</h2>
+            <p>Join the community of food lovers.</p>
+
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="ChefPanda">
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="name@company.com">
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="login-btn">Sign Up</button>
+            <p class="footer-text">Already have an account? <a href="/login">Sign In</a></p>
+        </form>
+    </main>
+
+    <script>
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('username', data.user.username);
+                window.location.href = "/";
+            } else {
+                alert("Registration failed. Email might already be in use.");
+            }
+        };
+    </script>
+</body>
+</html>
