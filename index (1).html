@@ -1,177 +1,278 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flavor Club</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<nav class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-  <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-    <a href="/" class="text-xl font-extrabold text-orange-500">Flavor Club 🍲</a>
-    
-    <div id="nav-links" class="flex gap-6 items-center font-semibold text-gray-600">
-      <a href="/" class="hover:text-orange-500 transition-colors">Home</a>
-      </div>
-  </div>
-</nav>
-<body class="bg-[#f8fafc] min-h-screen font-['Plus_Jakarta_Sans']">
-
-  <div class="max-w-2xl mx-auto py-12 px-4">
-    <header class="text-center mb-12">
-        <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600 mb-2">
-            Flavor Club 🍲
-        </h1>
-        <p class="text-gray-500">The home for secret recipes and food stories.</p>
-    </header>
-
-    <section id="new-post" class="bg-white p-6 rounded-2xl shadow-xl shadow-gray-200/50 mb-10 border border-gray-100 transition-all hover:shadow-2xl">
-      <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-        <span class="bg-orange-100 p-2 rounded-lg">✍️</span> Share a Dish
-      </h2>
-      <input id="title" placeholder="Recipe title..." class="w-full p-3 mb-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all" />
-      <textarea id="body" rows="4" placeholder="Share your recipe or food story..." class="w-full p-3 mb-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all resize-none"></textarea>
-      <button id="postBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-orange-200">
-        Create Post
-      </button>
-    </section>
-
-    <section id="posts">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Latest Flavors</h2>
-        <span class="text-xs font-bold uppercase tracking-widest text-orange-500 bg-orange-50 px-3 py-1 rounded-full">Newest First</span>
-      </div>
-      <div id="postsList" class="space-y-6">
-          </div>
-    </section>
-    <section id="chat-container" class="fixed bottom-4 right-4 w-80 bg-white shadow-2xl rounded-2xl border border-gray-200 overflow-hidden flex flex-col h-96">
-    <div class="bg-gradient-to-r from-orange-500 to-red-600 p-3 text-white font-bold flex justify-between">
-        <span>Community Chat 💬</span>
-    </div>
-    <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-2 text-sm">
-        </div>
-    <div class="p-3 border-t flex gap-2">
-        <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 text-sm outline-none">
-        <button id="send-chat" class="text-orange-500 font-bold">Send</button>
-    </div>
-</section>
-  </div>
-
-  <script>
-    // 1. Setup Global Variables
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
-    const postsList = document.getElementById('postsList');
-    const newPostSection = document.getElementById('new-post');
-
-    // 2. Handle Navigation & UI State
-    function updateUI() {
-        const navLinks = document.getElementById('nav-links');
-        
-        if (token) {
-            // User is logged in: Show their name and Logout button
-            navLinks.innerHTML = `
-                <span class="text-sm text-gray-400">Welcome, <b>${username}</b></span>
-                <button onclick="logout()" class="text-red-500 hover:text-red-700 font-bold">Logout</button>
-            `;
-            newPostSection.classList.remove('hidden'); // Ensure the post form is visible
-        } else {
-            // User is a guest: Show Login/Register and hide the post form
-            navLinks.innerHTML = `
-                <a href="/login" class="hover:text-orange-500">Login</a>
-                <a href="/register" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-all">Join Club</a>
-            `;
-            newPostSection.style.display = 'none'; 
-        }
-    }
-
-    // 3. Fetch Posts from SQLite via FastAPI
-    async function loadPosts() {
-        try {
-            const res = await fetch('/posts');
-            const posts = await res.json();
-            
-            if (posts.length === 0) {
-                postsList.innerHTML = `<p class="text-center text-gray-400 py-10">No recipes shared yet. Be the first!</p>`;
-                return;
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flavor Club | Interactive Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Super slow, cinematic zoom */
+        @keyframes kenburns {
+            0% {
+                transform: scale(1.05);
             }
 
-            postsList.innerHTML = posts.map(post => `
-                <article class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 post-card">
-                    <h3 class="text-xl font-bold text-gray-800">${post.title}</h3>
-                    <p class="text-gray-600 mt-2">${post.body}</p>
-                    <div class="mt-4 flex justify-between items-center">
-                        <span class="text-xs font-bold text-orange-500 uppercase">Recipe</span>
-                        <span class="text-xs text-gray-400">${new Date(post.created_at).toLocaleDateString()}</span>
+            50% {
+                transform: scale(1.12);
+            }
+
+            100% {
+                transform: scale(1.05);
+            }
+        }
+
+        .animate-kenburns {
+            animation: kenburns 60s ease-in-out infinite;
+        }
+
+        #bg-layer {
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        /* Heart Pulse Animation */
+        @keyframes heartBeat {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.3);
+            }
+
+            50% {
+                transform: scale(1);
+            }
+        }
+
+        .animate-heart:active {
+            animation: heartBeat 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen font-['Plus_Jakarta_Sans'] relative">
+
+    <div id="bg-container" class="fixed inset-0 -z-10 overflow-hidden bg-black">
+        <div id="bg-layer" class="absolute inset-0 bg-cover bg-center bg-no-repeat animate-kenburns"
+            style="filter: blur(4px) brightness(0.8); opacity: 1;">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50"></div>
+    </div>
+
+    <nav class="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-extrabold text-orange-600 drop-shadow-sm">Flavor Club 🍲</a>
+            <div id="nav-links" class="flex gap-6 items-center font-semibold text-gray-800"></div>
+        </div>
+    </nav>
+
+    <div class="max-w-2xl mx-auto py-12 px-4">
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-extrabold text-white mb-2 drop-shadow-xl">Flavor Club 🍲</h1>
+            <p class="text-white font-semibold text-lg drop-shadow-lg opacity-90">Share recipes, like favorites, and
+                join the conversation.</p>
+        </header>
+
+        <section id="new-post"
+            class="bg-white/95 backdrop-blur-xl p-6 rounded-3xl shadow-2xl mb-10 border border-white/40 transition-all">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">
+                <span class="bg-orange-100 p-2 rounded-xl">✍️</span> Share a Dish
+            </h2>
+            <input id="title" placeholder="Recipe title..."
+                class="w-full p-3 mb-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 outline-none transition-all" />
+            <textarea id="body" rows="4" placeholder="Share your recipe or food story..."
+                class="w-full p-3 mb-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 outline-none transition-all resize-none"></textarea>
+
+            <div class="mb-4">
+                <label for="imageInput"
+                    class="inline-flex items-center gap-2 cursor-pointer bg-gray-50 hover:bg-gray-100 text-gray-600 px-4 py-2 rounded-lg border border-dashed border-gray-300 transition-all w-full justify-center">
+                    <span class="text-xl">📷</span> <span>Add a Photo</span>
+                    <input type="file" id="imageInput" accept="image/*" class="hidden">
+                </label>
+                <div id="image-preview" class="mt-2 hidden">
+                    <img src="" class="w-full h-48 object-cover rounded-xl border border-gray-100 shadow-sm">
+                </div>
+            </div>
+
+            <button id="postBtn"
+                class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 rounded-xl hover:opacity-95 active:scale-[0.98] transition-all shadow-lg">
+                Create Post
+            </button>
+        </section>
+
+        <section id="posts">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white drop-shadow-lg">Latest Flavors</h2>
+                <span
+                    class="text-xs font-bold uppercase tracking-widest text-orange-600 bg-white px-3 py-1 rounded-full shadow-md">Newest
+                    First</span>
+            </div>
+            <div id="postsList" class="space-y-6"></div>
+        </section>
+    </div>
+
+    <div class="fixed bottom-6 right-6 z-[100]">
+        <div id="chat-window"
+            class="hidden flex-col bg-white/95 backdrop-blur-lg w-80 h-96 rounded-2xl shadow-2xl border border-white/30 mb-4 overflow-hidden">
+            <div
+                class="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white flex justify-between items-center shadow-md">
+                <span class="font-bold">Club Chat 💬</span>
+                <button onclick="toggleChat()" class="hover:bg-white/20 rounded-lg p-1">✕</button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-2 text-sm bg-gray-50/80"></div>
+            <div class="p-3 border-t border-gray-100 bg-white flex gap-2">
+                <input id="chat-input" type="text" placeholder="Type a message..."
+                    class="flex-1 text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-400">
+                <button id="send-chat"
+                    class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors">Send</button>
+            </div>
+        </div>
+        <button onclick="toggleChat()"
+            class="float-right bg-orange-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform active:scale-95 flex items-center justify-center">
+            <span class="text-2xl">💬</span>
+        </button>
+    </div>
+
+    <script>
+        // --- 1. Wallpaper Logic (30s Interval) ---
+        const wallpapers = [
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=2070',
+            'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=2070',
+            'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=2070',
+            'https://images.unsplash.com/photo-1473093226795-af9932fe5856?auto=format&fit=crop&q=80&w=2070'
+        ];
+        let currentIdx = 0;
+        const bgLayer = document.getElementById('bg-layer');
+        bgLayer.style.backgroundImage = `url('${wallpapers[0]}')`;
+
+        setInterval(() => {
+            bgLayer.style.opacity = '0';
+            setTimeout(() => {
+                currentIdx = (currentIdx + 1) % wallpapers.length;
+                bgLayer.style.backgroundImage = `url('${wallpapers[currentIdx]}')`;
+                bgLayer.style.opacity = '1';
+            }, 1500);
+        }, 30000);
+
+        // --- 2. Interaction & Feed Logic ---
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const postsList = document.getElementById('postsList');
+
+        function updateUI() {
+            const navLinks = document.getElementById('nav-links');
+            const newPostSection = document.getElementById('new-post');
+            if (token) {
+                navLinks.innerHTML = `<span class="text-sm">Welcome, <b>${username}</b></span><button onclick="logout()" class="text-red-600 hover:text-red-800 font-bold ml-4">Logout</button>`;
+                newPostSection.style.display = 'block';
+            } else {
+                navLinks.innerHTML = `<a href="login.html" class="hover:text-orange-600">Login</a><a href="register.html" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 shadow-md">Join Club</a>`;
+                newPostSection.style.display = 'none';
+            }
+        }
+
+        async function handleLike(postId) {
+            if (!token) return alert("Login to like!");
+            const res = await fetch(`/posts/${postId}/like`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) loadPosts();
+        }
+
+        function toggleComments(postId) {
+            document.getElementById(`comment-section-${postId}`).classList.toggle('hidden');
+        }
+
+        async function submitComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            if (!input.value) return;
+            const res = await fetch(`/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ body: input.value })
+            });
+            if (res.ok) { input.value = ''; loadPosts(); }
+        }
+
+        async function loadPosts() {
+            try {
+                const res = await fetch('/posts');
+                const posts = await res.json();
+                if (posts.length === 0) {
+                    postsList.innerHTML = `<p class="text-center text-white py-10">No recipes shared yet.</p>`;
+                    return;
+                }
+                postsList.innerHTML = posts.map(post => `
+                <article class="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden mb-6 border border-white/20">
+                    ${post.image_url ? `<img src="${post.image_url}" class="w-full h-64 object-cover">` : ''}
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800">${post.title}</h3>
+                        <p class="text-gray-600 mt-2">${post.body}</p>
+                        
+                        <div class="mt-6 flex items-center gap-6 pt-4 border-t border-gray-100">
+                            <button onclick="handleLike(${post.id})" class="flex items-center gap-2 group animate-heart">
+                                <span class="text-xl group-hover:scale-110 transition-transform">❤️</span>
+                                <span class="text-sm font-bold text-gray-500">${post.likes || 0}</span>
+                            </button>
+                            <button onclick="toggleComments(${post.id})" class="flex items-center gap-2 group">
+                                <span class="text-xl group-hover:rotate-12 transition-transform">💬</span>
+                                <span class="text-sm font-bold text-gray-500">Comments</span>
+                            </button>
+                            <div class="ml-auto text-right text-xs">
+                                <span class="block font-bold text-orange-600 uppercase">Chef ${post.username || 'Member'}</span>
+                                <span class="text-gray-400">${new Date(post.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+
+                        <div id="comment-section-${post.id}" class="hidden mt-4 pt-4 border-t border-gray-50 bg-gray-50/50 rounded-xl p-3">
+                            <div class="flex gap-2 mb-3">
+                                <input id="comment-input-${post.id}" type="text" placeholder="Add a comment..." class="flex-1 text-sm p-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-orange-400">
+                                <button onclick="submitComment(${post.id})" class="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold">Post</button>
+                            </div>
+                            <div class="space-y-2 max-h-40 overflow-y-auto">
+                                ${post.comments ? post.comments.map(c => `<p class="text-xs"><b>${c.username}:</b> ${c.body}</p>`).join('') : '<p class="text-[11px] text-gray-400 italic">No comments yet...</p>'}
+                            </div>
+                        </div>
                     </div>
-                </article>
-            `).join('');
-        } catch (err) {
-            console.error("Error loading posts:", err);
-        }
-    }
-
-    // 4. Handle New Post Submission
-    document.getElementById('postBtn').onclick = async () => {
-        const title = document.getElementById('title').value;
-        const body = document.getElementById('body').value;
-
-        if (!title || !body) {
-            alert("Please fill out both the title and the recipe!");
-            return;
+                </article>`).join('');
+            } catch (err) { console.error(err); }
         }
 
-        const res = await fetch(`/posts?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // --- Helper Functions ---
+        document.getElementById('imageInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const preview = document.getElementById('image-preview');
+                    preview.querySelector('img').src = event.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
 
-        if (res.ok) {
-            window.location.reload(); // Refresh to show the new post
-        } else {
-            alert("Session expired. Please login again.");
-            logout();
-        }
-    };
+        document.getElementById('postBtn').onclick = async () => {
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+            const imageFile = document.getElementById('imageInput').files[0];
+            const formData = new FormData();
+            formData.append('title', title); formData.append('body', body);
+            if (imageFile) formData.append('image', imageFile);
+            const res = await fetch('/posts', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+            if (res.ok) window.location.reload();
+        };
 
-    // 5. Logout Function
-    function logout() {
-        localStorage.clear();
-        window.location.href = "/login";
-    }
+        function toggleChat() { document.getElementById('chat-window').classList.toggle('hidden'); document.getElementById('chat-window').classList.toggle('flex'); }
+        function logout() { localStorage.clear(); window.location.href = "login.html"; }
 
-    // Run on page load
-    updateUI();
-    loadPosts();
-    // 1. Establish WebSocket Connection
-const chatSocket = new WebSocket(`ws://${window.location.host}/ws/chat`);
-const chatMessages = document.getElementById('chat-messages');
-const chatInput = document.getElementById('chat-input');
-
-// 2. Listen for messages from the server
-chatSocket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    const msgDiv = document.createElement('div');
-    msgDiv.innerHTML = `<b class="text-orange-600">${data.user}:</b> ${data.msg}`;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
-};
-
-// 3. Send message when button is clicked
-document.getElementById('send-chat').onclick = () => {
-    const msg = chatInput.value;
-    const user = localStorage.getItem('username') || "Guest";
-    
-    if (msg) {
-        chatSocket.send(JSON.stringify({ user: user, msg: msg }));
-        chatInput.value = '';
-    }
-};
-
-// Allow pressing "Enter" to send
-chatInput.onkeypress = (e) => { if (e.key === 'Enter') document.getElementById('send-chat').click(); };
-  </script>
+        updateUI();
+        loadPosts();
+    </script>
 </body>
+
 </html>
